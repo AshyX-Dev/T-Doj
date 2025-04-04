@@ -19,7 +19,9 @@ const regexId = /\d+/;
 bot.on("message", async (message) => {
     message.text == undefined ? message.text = "" : true;
     if (transes.chats.includes(message.chat.id)){
+        let x = 0;
         for (let obj of transes[message.chat.id]['objects']){
+            x += 1;
             if (obj['to'] !== null){
                 if (obj['from'] == message.from.id){
                     if (obj['settings']['from_hash'] == null){
@@ -109,8 +111,10 @@ bot.on("message", async (message) => {
                                 }
                                 await bot.editMessageText(text, {
                                     chat_id: rmsg.chat.id,
-                                    message_id: rmsg.message_id
+                                    message_id: rmsg.message_id,
+                                    parse_mode: "HTML"
                                 })
+                                obj['objects'].splice(x, 1);
                             }
                         })
                     })
