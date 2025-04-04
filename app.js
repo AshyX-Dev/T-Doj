@@ -85,9 +85,7 @@ bot.on("message", async (message) => {
 
                 if (!match){
                     if (obj['settings']['translink'] == null && obj['settings']['to_hash'] != null && obj['settings']['from_hash'] != null){
-                        await bot.sendMessage(message.chat.id, `[ 🎛 ] - کاربر ${obj['from']} هش تراکنشو ارسال کنه`, {
-                            reply_to_message_id: message.message_id
-                        })
+                        await bot.sendMessage(message.chat.id, `[ 🎛 ] - کاربر ${obj['from']} هش تراکنشو ارسال کنه`)
                     }
                 } else {
                     let tHash = match[1];
