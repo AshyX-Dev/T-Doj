@@ -37,6 +37,10 @@ bot.on("message", async (message) => {
                                 } else {
                                     obj['text'] = obj['text'].replace('[ ⌨ ] - از: ...', `[ ⌨ ] - از: ${message.text}`) // EDIT ( REPLACE )
                                     obj['settings']['from_hash'] = message.text;
+                                    await bot.editMessageText(obj['text'], {
+                                        chat_id: message.chat.id,
+                                        message_id: obj['message_id']
+                                    })
                                     await bot.editMessageText("[ 📌 ] - هش ارسالی درسته و ذخیره شده است", {
                                         chat_id: lmsg.chat.id,
                                         message_id: lmsg.message_id
@@ -61,6 +65,10 @@ bot.on("message", async (message) => {
                                 } else {
                                     obj['text'] = obj['text'].replace('[ 🎟 ] - به: ...', `[ 🎟 ] - به: ${message.text}`) // EDIT ( REPLACE )
                                     obj['settings']['to_hash'] = message.text;
+                                    await bot.editMessageText(obj['text'], {
+                                        chat_id: message.chat.id,
+                                        message_id: obj['message_id']
+                                    })
                                     await bot.editMessageText("[ 📌 ] - هش ارسالی درسته و ذخیره شده است", {
                                         chat_id: lmsg.chat.id,
                                         message_id: lmsg.message_id
@@ -152,7 +160,10 @@ bot.on("message", async (message) => {
                 if (!transes.chats.includes(message.chat.id)) transes.chats.push(message.chat.id);
                 transes.tids.push(Buffer.from(message.from.id.toString()).toString("base64"));
 
-                transes[message.chat.id]['objects'] = [];
+                if (!Object.keys(transes).includes(Buffer.from(message.chat.id.toString()).toString())){
+                    transes[message.chat.id] = {};
+                    transes[message.chat.id]['objects'] = [];
+                }
                 transes[message.chat.id]['objects'].push({
                     from: message.from.id,
                     to: null,
