@@ -2,6 +2,8 @@ const token = "";
 
 const TelegramBot = require("node-telegram-bot-api");
 const { Network } = require("./network/net");
+const crypto = require("crypto");
+const fs = require("fs");
 
 const bot = new TelegramBot(token, { polling: true });
 const network = new Network();
@@ -13,8 +15,46 @@ const transes = {
 
 const regex = /^https:\/\/tronscan\.org\/#\/transaction\/([a-f0-9]{64})$/;
 const regexId = /\d+/;
+const regexMoreId = /\d+/g;
 
-// const match = message.match(regex);
+const append = async (info) => {
+    fs.readFile("trns.json", (err, data) => {
+        let dx = JSON.parse(data);
+        if (dx.tokens.includes(info.token)){}
+        else {
+            dx.tokens.push(info.token);
+            Object.defineProperty(dx, info.token, {
+                configurable: true,
+                enumerable: true,
+                writable: true,
+                value: info
+            })
+            fs.writeFile("trns.json", JSON.stringify(dx), (err) => {})
+        }
+    })
+}
+
+const capture = async (hash, clback = () => {}) => {
+    fs.readFile("trns.json", (err, data) => {
+        let dx = JSON.parse(data);
+        if (!dx.tokens.includes(hash)){ clback({ status: "ERROR" });return; }
+        else { 
+            clback({
+                status: "OK",
+                result: dx[hash]
+            });
+        }
+    })
+}
+
+const createHash = async () => {
+    const hash = crypto.createHash("md5").update(
+        (Math.floor(Math.random() * 99999999999999) - 100000000).toString()
+    ).digest("hex");
+
+    const formattedHash = `D-${hash.slice(0, 8)}-${hash.slice(8, 12)}-${hash.slice(12, 16)}-${hash.slice(16, 20)}-${hash.slice(20)}`;
+    return formattedHash;
+}
 
 bot.on("message", async (message) => {
     message.text == undefined ? message.text = "" : true;
@@ -101,9 +141,11 @@ bot.on("message", async (message) => {
                                     message_id: rmsg.message_id
                                 })
                             } else {
+                                let stat = false;
                                 let text = `[ 🕷 ] - از: ${obj['from']}\n[ 🦋 ] - به: ${obj['to']}\n\n[ 🎁 ] - ارسال کننده: <code>${obj['settings']['from_hash']}</code>\n\n[ 👔 ] - دریافت کننده: <code>${obj['settings']['to_hash']}</code>\n\n[ 💵 ] - بالانس: ${trans.balance}\n`;
                                 if (trans.ownerAddress == obj['settings']['from_hash'] && trans.toAddress == obj['settings']['to_hash']){
                                     text += `[ ✅ ] - ارسال کننده و دریافت کننده مچ هستن\n[ 🔰 ] - <a href="${trans.urlHash}">لینک تراکنش</a>`;
+                                    stat = true;
                                 } else {
                                     text += `[ ❌ ] - ارسال کننده و دریافت کننده مچ نیستند\n[ 🔰 ] - <a href="${trans.urlHash}">لینک تراکنش</a>`;
                                 }
@@ -112,7 +154,21 @@ bot.on("message", async (message) => {
                                     message_id: rmsg.message_id,
                                     parse_mode: "HTML"
                                 })
-                                obj['objects'].splice(x, 1);
+                                let lts = obj;
+                                stat === true ? lts['success'] = true : lts['success'] = false;
+                                createHash().then(async (hash) => {
+                                    lts.token = hash;
+                                    await append(lts)
+                                })
+                                const fm = Buffer.from(obj['from'].toString()).toString("base64");
+                                const tp = Buffer.from(obj['to'].toString()).toString("base64");
+                                transes[message.chat.id]['objects'].splice(x, 1);
+                                delete transes.tids[fm];
+                                delete transes.tids[tp];
+                                if (transes[message.chat.id]['objects'].length == 0){
+                                    delete transes[message.chat.id];
+                                    delete transes.chats.splice(transes.chats.indexOf(message.chat.id), 1);
+                                }
                             }
                         })
                     })
@@ -121,7 +177,7 @@ bot.on("message", async (message) => {
         }
     }
 
-    if (message.text.startsWith("واسطه")){
+    if (message.text == "واسطه"){
         if (transes.tids.includes(Buffer.from(message.from.id.toString()).toString("base64"))){
             await bot.sendMessage(
                 message.chat.id,
@@ -170,6 +226,7 @@ bot.on("message", async (message) => {
                     from: message.from.id,
                     to: null,
                     message_id: rmsg.message_id,
+                    end: new Date().getTime() + 300000,
                     text: "",
                     settings: {
                         from_hash: null,
@@ -178,6 +235,88 @@ bot.on("message", async (message) => {
                     }
                 });
             })
+        }
+    } else if (message.text == "واسطه +"){
+        if (transes.tids.includes(Buffer.from(message.from.id.toString()).toString("base64"))){
+            await bot.sendMessage(
+                message.chat.id,
+                "[ ❌ ] - معامله ای برای شمال تحت انجام است",
+                {
+                    reply_to_message_id: message.message_id,
+                    reply_markup: {
+                        inline_keyboard: [
+                            [
+                                {
+                                    text: "بستن 🍬",
+                                    callback_data: `close_${message.from.id}`
+                                }
+                            ]
+                        ]
+                    }
+                }
+            )
+        } else {
+            if (message.reply_to_message){
+                await bot.sendMessage(
+                    message.chat.id,
+                    `[ 💎 ] - توجه داشته باش که طرف مقابلت ${message.reply_to_message.from.id} هس و خودت ${message.from.id}\n\n<b>نقش ها ♻</b>\n[ 🔐 ] - دریافت کننده: کسی که قراره پول رو دریافت بکنه\n[ 🔓 ] - ارسال کننده: کسی که قراره پولو بزنه`,
+                    {
+                        reply_to_message_id: message.message_id,
+                        reply_markup: {
+                            inline_keyboard: [
+                                [
+                                    {
+                                        text: "دریافت کننده 📪",
+                                        callback_data: `get_${message.from.id}`
+                                    },
+                                    {
+                                        text: "ارسال کننده 🍬",
+                                        callback_data: `send_${message.from.id}`
+                                    }
+                                ]
+                            ]
+                        }
+                    }
+                ).then(async (rmsg) => {
+                    if (!transes.chats.includes(message.chat.id)) transes.chats.push(message.chat.id);
+                    transes.tids.push(Buffer.from(message.from.id.toString()).toString("base64"));
+
+                    if (!Object.keys(transes).includes(Buffer.from(message.chat.id.toString()).toString())){
+                        transes[message.chat.id] = {};
+                        transes[message.chat.id]['objects'] = [];
+                    }
+                    transes[message.chat.id]['objects'].push({
+                        from: null,
+                        to: null,
+                        message_id: rmsg.message_id,
+                        end: new Date().getTime() + 300000,
+                        text: "",
+                        settings: {
+                            from_hash: null,
+                            to_hash: null,
+                            translink: null
+                        }
+                    });
+                })
+            } else {
+                await bot.sendMessage(
+                    message.chat.id,
+                    "[ ❌ ] - روی شخص مورد نظر ریپلای کن",
+                    {
+                        reply_to_message_id: message.message_id,
+                        reply_markup: {
+                            inline_keyboard: [
+                                [
+                                    {
+                                        text: "بستن 🍬",
+                                        callback_data: `close_${message.from.id}`
+                                    }
+                                ]
+                            ]
+                        }
+                    }
+                )
+            }
         }
     }
 })
@@ -208,5 +347,66 @@ bot.on("callback_query", async (call) => {
                 }
             }
         }
+    } else if (call.data.startsWith("get")){
+        if (transes.tids.includes(Buffer.from(call.from.id.toString()).toString("base64"))){}
+        else {
+            const iids = call.message.text.match(regexMoreId);
+            const fmid = iids[1];
+            const toid = iids[0];
+            for (let obj of transes[call.message.chat.id]['objects']){
+                if (obj['message_id'] == call.message.message_id){
+                    obj['from'] = parseInt(toid);
+                    obj['to'] = parseInt(fmid);
+                    let txt = `[ 🍷 ] - آغاز از سمت: ${toid}\n[ 🎾 ] - به: ${fmid}\n\n[ ⌨ ] - از: ...\n\n[ 🎟 ] - به: ...\n\n[ 📃 ] - لطفا هش اکانتاتون رو ارسال کنید`;
+                    obj['text'] = txt;
+                    await bot.editMessageText(txt, {
+                        chat_id: call.message.chat.id,
+                        message_id: call.message.message_id
+                    })
+                    break
+                }
+            }
+        }
+    } else if (call.data.startsWith("send")){
+        if (transes.tids.includes(Buffer.from(call.from.id.toString()).toString("base64"))){}
+        else {
+            const iids = call.message.text.match(regexMoreId);
+            const fmid = iids[1];
+            const toid = iids[0];
+            for (let obj of transes[call.message.chat.id]['objects']){
+                if (obj['message_id'] == call.message.message_id){
+                    obj['from'] = parseInt(fmid);
+                    obj['to'] = parseInt(toid);
+                    let txt = `[ 🍷 ] - آغاز از سمت: ${fmid}\n[ 🎾 ] - به: ${toid}\n\n[ ⌨ ] - از: ...\n\n[ 🎟 ] - به: ...\n\n[ 📃 ] - لطفا هش اکانتاتون رو ارسال کنید`;
+                    obj['text'] = txt;
+                    await bot.editMessageText(txt, {
+                        chat_id: call.message.chat.id,
+                        message_id: call.message.message_id
+                    })
+                    break
+                }
+            }
+        }
     }
 })
+
+setInterval(() => {
+    for (let chat of transes.chats){
+        let now = new Date().getTime();
+        let x = 0;
+        for (let obj of transes[chat]['objects']){
+            x += 1;
+            if (obj['end'] <= now){
+                const fm = Buffer.from(obj['from'].toString()).toString("base64");
+                const tp = Buffer.from(obj['to'].toString()).toString("base64");
+                transes[chat]['objects'].splice(x, 1);
+                delete transes.tids[fm];
+                delete transes.tids[tp];
+                if (transes[chat]['objects'].length == 0){
+                    delete transes[chat];
+                    delete transes.chats.splice(transes.chats.indexOf(chat), 1);
+                }
+            }
+        }
+    }
+}, 3000)
