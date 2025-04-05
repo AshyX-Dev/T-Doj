@@ -18,7 +18,9 @@ const regexId = /\d+/;
 const regexMoreId = /\d+/g;
 
 if (!fs.existsSync("trns.json")){
-
+    fs.writeFileSync("trns.json", JSON.stringify({
+        tokens: []
+    }))
 }
 
 const append = async (info) => {
