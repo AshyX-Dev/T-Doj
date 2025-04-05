@@ -397,11 +397,24 @@ setInterval(() => {
         for (let obj of transes[chat]['objects']){
             x += 1;
             if (obj['end'] <= now){
-                const fm = Buffer.from(obj['from'].toString()).toString("base64");
-                const tp = Buffer.from(obj['to'].toString()).toString("base64");
+                let fm = null;
+                let tp = null;
+                try{
+                    fm = Buffer.from(obj['from'].toString()).toString("base64");
+                } catch (e) {}
+                try {
+                    tp = Buffer.from(obj['to'].toString()).toString("base64");
+                } catch (e) {}
+                
                 transes[chat]['objects'].splice(x, 1);
-                delete transes.tids[fm];
-                delete transes.tids[tp];
+                if (transes.tids.includes(fm)){
+                    delete transes.tids[fm];
+                }
+                
+                if (transes.tids.includes(tp)){
+                    delete transes.tids[tp];
+                }
+                
                 if (transes[chat]['objects'].length == 0){
                     delete transes[chat];
                     delete transes.chats.splice(transes.chats.indexOf(chat), 1);
