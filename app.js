@@ -17,6 +17,10 @@ const regex = /^https:\/\/tronscan\.org\/#\/transaction\/([a-f0-9]{64})$/;
 const regexId = /\d+/;
 const regexMoreId = /\d+/g;
 
+if (!fs.existsSync("trns.json")){
+
+}
+
 const append = async (info) => {
     fs.readFile("trns.json", (err, data) => {
         let dx = JSON.parse(data);
@@ -261,6 +265,7 @@ bot.on("message", async (message) => {
                     message.chat.id,
                     `[ 💎 ] - توجه داشته باش که طرف مقابلت ${message.reply_to_message.from.id} هس و خودت ${message.from.id}\n\n<b>نقش ها ♻</b>\n[ 🔐 ] - دریافت کننده: کسی که قراره پول رو دریافت بکنه\n[ 🔓 ] - ارسال کننده: کسی که قراره پولو بزنه`,
                     {
+                        parse_mode: "HTML",
                         reply_to_message_id: message.message_id,
                         reply_markup: {
                             inline_keyboard: [
@@ -355,9 +360,9 @@ bot.on("callback_query", async (call) => {
             const toid = iids[0];
             for (let obj of transes[call.message.chat.id]['objects']){
                 if (obj['message_id'] == call.message.message_id){
-                    obj['from'] = parseInt(toid);
-                    obj['to'] = parseInt(fmid);
-                    let txt = `[ 🍷 ] - آغاز از سمت: ${toid}\n[ 🎾 ] - به: ${fmid}\n\n[ ⌨ ] - از: ...\n\n[ 🎟 ] - به: ...\n\n[ 📃 ] - لطفا هش اکانتاتون رو ارسال کنید`;
+                    obj['from'] = parseInt(fmid);
+                    obj['to'] = parseInt(toid);
+                    let txt = `[ 🍷 ] - آغاز از سمت: ${fmid}\n[ 🎾 ] - به: ${toid}\n\n[ ⌨ ] - از: ...\n\n[ 🎟 ] - به: ...\n\n[ 📃 ] - لطفا هش اکانتاتون رو ارسال کنید`;
                     obj['text'] = txt;
                     await bot.editMessageText(txt, {
                         chat_id: call.message.chat.id,
@@ -375,9 +380,9 @@ bot.on("callback_query", async (call) => {
             const toid = iids[0];
             for (let obj of transes[call.message.chat.id]['objects']){
                 if (obj['message_id'] == call.message.message_id){
-                    obj['from'] = parseInt(fmid);
-                    obj['to'] = parseInt(toid);
-                    let txt = `[ 🍷 ] - آغاز از سمت: ${fmid}\n[ 🎾 ] - به: ${toid}\n\n[ ⌨ ] - از: ...\n\n[ 🎟 ] - به: ...\n\n[ 📃 ] - لطفا هش اکانتاتون رو ارسال کنید`;
+                    obj['from'] = parseInt(toid);
+                    obj['to'] = parseInt(fmid);
+                    let txt = `[ 🍷 ] - آغاز از سمت: ${toid}\n[ 🎾 ] - به: ${fmid}\n\n[ ⌨ ] - از: ...\n\n[ 🎟 ] - به: ...\n\n[ 📃 ] - لطفا هش اکانتاتون رو ارسال کنید`;
                     obj['text'] = txt;
                     await bot.editMessageText(txt, {
                         chat_id: call.message.chat.id,
@@ -414,7 +419,7 @@ setInterval(() => {
                 if (transes.tids.includes(tp)){
                     delete transes.tids[tp];
                 }
-                
+
                 if (transes[chat]['objects'].length == 0){
                     delete transes[chat];
                     delete transes.chats.splice(transes.chats.indexOf(chat), 1);
