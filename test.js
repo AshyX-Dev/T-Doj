@@ -29,4 +29,13 @@
 //     console.log(a);
 // });
 
+const regex = /^https:\/\/tronscan\.org\/#\/transaction\/([a-f0-9]{64})$/;
+let text1 = "https://tronscan.org/#/transaction/3884511adfd3b33db7e185bad7ec978587435767e041da5a5d4ab78076f0acc3";
+let text2 = "https://tronscan.org/#/transaction/";
+let text3 = "hello world";
 
+let mtch = text1.match(regex);
+// let mtch = text2.match(regex);
+// let mtch = text3.match(regex);
+
+console.log(mtch)

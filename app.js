@@ -129,7 +129,7 @@ bot.on("message", async (message) => {
 
                 let match = message.text.match(regex);
 
-                if (!match){
+                if (!match == null){
                     if (obj['settings']['translink'] == null && obj['settings']['to_hash'] != null && obj['settings']['from_hash'] != null){
                         await bot.sendMessage(message.chat.id, `[ 🎛 ] - کاربر ${obj['from']} هش تراکنشو ارسال کنه`)
                     }
@@ -148,33 +148,33 @@ bot.on("message", async (message) => {
                                 })
                             } else {
                                 let stat = false;
-                                let text = `[ 🕷 ] - از: ${obj['from']}\n[ 🦋 ] - به: ${obj['to']}\n\n[ 🎁 ] - ارسال کننده: <code>${obj['settings']['from_hash']}</code>\n\n[ 👔 ] - دریافت کننده: <code>${obj['settings']['to_hash']}</code>\n\n[ 💵 ] - بالانس: ${trans.balance}\n`;
-                                if (trans.ownerAddress == obj['settings']['from_hash'] && trans.toAddress == obj['settings']['to_hash']){
-                                    text += `[ ✅ ] - ارسال کننده و دریافت کننده مچ هستن\n[ 🔰 ] - <a href="${trans.urlHash}">لینک تراکنش</a>`;
-                                    stat = true;
-                                } else {
-                                    text += `[ ❌ ] - ارسال کننده و دریافت کننده مچ نیستند\n[ 🔰 ] - <a href="${trans.urlHash}">لینک تراکنش</a>`;
-                                }
-                                await bot.editMessageText(text, {
-                                    chat_id: rmsg.chat.id,
-                                    message_id: rmsg.message_id,
-                                    parse_mode: "HTML"
-                                })
                                 let lts = obj;
-                                stat === true ? lts['success'] = true : lts['success'] = false;
                                 createHash().then(async (hash) => {
                                     lts.token = hash;
                                     await append(lts)
+                                    let text = `[ 🕷 ] - از: ${obj['from']}\n[ 🦋 ] - به: ${obj['to']}\n\n[ 🎁 ] - ارسال کننده: <code>${obj['settings']['from_hash']}</code>\n\n[ 👔 ] - دریافت کننده: <code>${obj['settings']['to_hash']}</code>\n\n[ 💵 ] - بالانس: ${trans.balance}\n`;
+                                    if (trans.ownerAddress == obj['settings']['from_hash'] && trans.toAddress == obj['settings']['to_hash']){
+                                        text += `[ ✅ ] - ارسال کننده و دریافت کننده مچ هستن\n[ 🔰 ] - <a href="${trans.urlHash}">لینک تراکنش</a>\n[ 🏁 ] - توکن: <code>${hash}</code>`;
+                                        stat = true;
+                                    } else {
+                                        text += `[ ❌ ] - ارسال کننده و دریافت کننده مچ نیستند\n[ 🔰 ] - <a href="${trans.urlHash}">لینک تراکنش</a>\n[ 🏁 ] - توکن: <code>${hash}</code>`;
+                                    }
+                                    await bot.editMessageText(text, {
+                                        chat_id: rmsg.chat.id,
+                                        message_id: rmsg.message_id,
+                                        parse_mode: "HTML"
+                                    })
+                                    stat === true ? lts['success'] = true : lts['success'] = false;
+                                    const fm = Buffer.from(obj['from'].toString()).toString("base64");
+                                    const tp = Buffer.from(obj['to'].toString()).toString("base64");
+                                    transes[message.chat.id]['objects'].splice(x, 1);
+                                    delete transes.tids[fm];
+                                    delete transes.tids[tp];
+                                    if (transes[message.chat.id]['objects'].length == 0){
+                                        delete transes[message.chat.id];
+                                        delete transes.chats.splice(transes.chats.indexOf(message.chat.id), 1);
+                                    }
                                 })
-                                const fm = Buffer.from(obj['from'].toString()).toString("base64");
-                                const tp = Buffer.from(obj['to'].toString()).toString("base64");
-                                transes[message.chat.id]['objects'].splice(x, 1);
-                                delete transes.tids[fm];
-                                delete transes.tids[tp];
-                                if (transes[message.chat.id]['objects'].length == 0){
-                                    delete transes[message.chat.id];
-                                    delete transes.chats.splice(transes.chats.indexOf(message.chat.id), 1);
-                                }
                             }
                         })
                     })

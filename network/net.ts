@@ -8,7 +8,6 @@ import { Transit, RealTransaction } from "./interface";
 import axios from 'axios';
 
 export class Network {
-
     async getAccountInfo(hash: string, callback: (resp: Transit) => void = () => {}){
         await axios.get(`https://apilist.tronscanapi.com/api/accountv2?address=${hash}`, {
             headers: {
