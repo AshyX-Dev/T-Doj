@@ -96,6 +96,9 @@ bot.on("message", async (message) => {
                                         chat_id: lmsg.chat.id,
                                         message_id: lmsg.message_id
                                     })
+                                    if (obj['settings']['translink'] == null && obj['settings']['to_hash'] != null && obj['settings']['from_hash'] != null){
+                                        await bot.sendMessage(message.chat.id, `[ 🎛 ] - کاربر ${obj['from']} هش تراکنشو ارسال کنه`)
+                                    }
                                 }
                             })
                         })
@@ -124,20 +127,16 @@ bot.on("message", async (message) => {
                                         chat_id: lmsg.chat.id,
                                         message_id: lmsg.message_id
                                     })
+                                    if (obj['settings']['translink'] == null && obj['settings']['to_hash'] != null && obj['settings']['from_hash'] != null){
+                                        await bot.sendMessage(message.chat.id, `[ 🎛 ] - کاربر ${obj['from']} هش تراکنشو ارسال کنه`)
+                                    }
                                 }
                             })
                         })
                     }
-                }
+                } 
 
-                let match = message.text.match(regex);
-
-                if (!match == null){
-                    if (obj['settings']['translink'] == null && obj['settings']['to_hash'] != null && obj['settings']['from_hash'] != null){
-                        await bot.sendMessage(message.chat.id, `[ 🎛 ] - کاربر ${obj['from']} هش تراکنشو ارسال کنه`)
-                    }
-                } else {
-                    let tHash = match[1];
+                if (message.text.startsWith("https://tronscan.org/#/transaction/") && message.from.id == obj['from']){
                     await bot.deleteMessage(message.chat.id, message.message_id);
                     await bot.sendMessage(
                         message.chat.id,
@@ -290,7 +289,7 @@ bot.on("message", async (message) => {
                     }
                 ).then(async (rmsg) => {
                     let cis = Buffer.from(message.chat.id.toString()).toString();
-                    if (!transes.chats.includes(cis)) transes.chats.push(cis);transes[message.chat.id] = {};transes[message.chat.id]['objects'] = []
+                    if (!transes.chats.includes(cis)) { transes.chats.push(cis);transes[message.chat.id] = {};transes[message.chat.id]['objects'] = [] }
                     transes.tids.push(Buffer.from(message.from.id.toString()).toString("base64"));
 
                     if (!Object.keys(transes).includes(cis)){
