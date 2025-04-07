@@ -147,6 +147,7 @@ bot.on("message", async (message) => {
                                     message_id: rmsg.message_id
                                 })
                             } else {
+                                obj['settings']['translink'] = message.text;
                                 let stat = false;
                                 let lts = obj;
                                 createHash().then(async (hash) => {
@@ -395,6 +396,41 @@ bot.on("callback_query", async (call) => {
             }
         }
     }
+})
+
+bot.on("inline_query", async (inline) => {
+    await capture(inline.query, async (data) => {
+        if (data['status'] == "OK"){
+            let date = new Date(data['end']);
+            await bot.answerInlineQuery(
+                inline.id,
+                [
+                    {
+                        type: "article",
+                        id: inline.query,
+                        title: "👁 Token Found",
+                        input_message_content: {
+                            message_text: `[ 🎫 ] - token: ${inline.query}\n[ 🌊 ] - from, to: ${data['from']} -> ${data['to']}\n\n[ 🕸 ] - from wallet: ${data['settings']['from_hash']}\n\n[ 🦋 ] - to wallet: ${data['settings']['to_hash']}\n\n[ 🍬 ] - link: ${data['settings']['translink']}\n[ ⌛ ] - finished in ${date.getFullYear()}/${date.getMonth()}/${date.getDay()} - ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}:${date.getMilliseconds()}`
+                        }
+                    }
+                ]
+            )
+        } else {
+            await bot.answerInlineQuery(
+                inline.id,
+                [
+                    {
+                        type: "article",
+                        id: inline.query,
+                        title: "❌ Token Not Found",
+                        input_message_content: {
+                            message_text: `[ ❌ ] - token not found`
+                        }
+                    }
+                ]
+            )
+        }
+    })
 })
 
 setInterval(() => {
