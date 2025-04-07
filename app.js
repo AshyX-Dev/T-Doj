@@ -66,6 +66,9 @@ bot.on("message", async (message) => {
     message.text == undefined ? message.text = "" : true;
     if (transes.chats.includes(message.chat.id)){
         let x = 0;
+        if (!Object.keys(transes[message.chat.id]).includes("objects")){
+            transes[message.chat.id]['objects'] = [];
+        }
         for (let obj of transes[message.chat.id]['objects']){
             x += 1;
             if (obj['to'] !== null){
@@ -286,10 +289,11 @@ bot.on("message", async (message) => {
                         }
                     }
                 ).then(async (rmsg) => {
-                    if (!transes.chats.includes(message.chat.id)) transes.chats.push(message.chat.id);
+                    let cis = Buffer.from(message.chat.id.toString()).toString();
+                    if (!transes.chats.includes(cis)) transes.chats.push(cis);transes[message.chat.id] = {};transes[message.chat.id]['objects'] = []
                     transes.tids.push(Buffer.from(message.from.id.toString()).toString("base64"));
 
-                    if (!Object.keys(transes).includes(Buffer.from(message.chat.id.toString()).toString())){
+                    if (!Object.keys(transes).includes(cis)){
                         transes[message.chat.id] = {};
                         transes[message.chat.id]['objects'] = [];
                     }
@@ -361,17 +365,19 @@ bot.on("callback_query", async (call) => {
             const iids = call.message.text.match(regexMoreId);
             const fmid = iids[1];
             const toid = iids[0];
-            for (let obj of transes[call.message.chat.id]['objects']){
-                if (obj['message_id'] == call.message.message_id){
-                    obj['from'] = parseInt(fmid);
-                    obj['to'] = parseInt(toid);
-                    let txt = `[ 🍷 ] - آغاز از سمت: ${fmid}\n[ 🎾 ] - به: ${toid}\n\n[ ⌨ ] - از: ...\n\n[ 🎟 ] - به: ...\n\n[ 📃 ] - لطفا هش اکانتاتون رو ارسال کنید`;
-                    obj['text'] = txt;
-                    await bot.editMessageText(txt, {
-                        chat_id: call.message.chat.id,
-                        message_id: call.message.message_id
-                    })
-                    break
+            if (transes.chats.includes(Buffer.from(call.message.chat.id.toString()).toString())){
+                for (let obj of transes[call.message.chat.id]['objects']){
+                    if (obj['message_id'] == call.message.message_id){
+                        obj['from'] = parseInt(fmid);
+                        obj['to'] = parseInt(toid);
+                        let txt = `[ 🍷 ] - آغاز از سمت: ${fmid}\n[ 🎾 ] - به: ${toid}\n\n[ ⌨ ] - از: ...\n\n[ 🎟 ] - به: ...\n\n[ 📃 ] - لطفا هش اکانتاتون رو ارسال کنید`;
+                        obj['text'] = txt;
+                        await bot.editMessageText(txt, {
+                            chat_id: call.message.chat.id,
+                            message_id: call.message.message_id
+                        })
+                        break
+                    }
                 }
             }
         }
@@ -381,17 +387,19 @@ bot.on("callback_query", async (call) => {
             const iids = call.message.text.match(regexMoreId);
             const fmid = iids[1];
             const toid = iids[0];
-            for (let obj of transes[call.message.chat.id]['objects']){
-                if (obj['message_id'] == call.message.message_id){
-                    obj['from'] = parseInt(toid);
-                    obj['to'] = parseInt(fmid);
-                    let txt = `[ 🍷 ] - آغاز از سمت: ${toid}\n[ 🎾 ] - به: ${fmid}\n\n[ ⌨ ] - از: ...\n\n[ 🎟 ] - به: ...\n\n[ 📃 ] - لطفا هش اکانتاتون رو ارسال کنید`;
-                    obj['text'] = txt;
-                    await bot.editMessageText(txt, {
-                        chat_id: call.message.chat.id,
-                        message_id: call.message.message_id
-                    })
-                    break
+            if (transes.chats.includes(Buffer.from(call.message.chat.id.toString()).toString())){
+                for (let obj of transes[call.message.chat.id]['objects']){
+                    if (obj['message_id'] == call.message.message_id){
+                        obj['from'] = parseInt(toid);
+                        obj['to'] = parseInt(fmid);
+                        let txt = `[ 🍷 ] - آغاز از سمت: ${toid}\n[ 🎾 ] - به: ${fmid}\n\n[ ⌨ ] - از: ...\n\n[ 🎟 ] - به: ...\n\n[ 📃 ] - لطفا هش اکانتاتون رو ارسال کنید`;
+                        obj['text'] = txt;
+                        await bot.editMessageText(txt, {
+                            chat_id: call.message.chat.id,
+                            message_id: call.message.message_id
+                        })
+                        break
+                    }
                 }
             }
         }
