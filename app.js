@@ -64,7 +64,7 @@ const createHash = async () => {
 
 bot.on("message", async (message) => {
     message.text == undefined ? message.text = "" : true;
-    if (transes.chats.includes(message.chat.id)){
+    if (transes.chats.includes(Buffer.from(message.chat.id.toString()).toString())){
         let x = 0;
         if (!Object.keys(transes[message.chat.id]).includes("objects")){
             transes[message.chat.id]['objects'] = [];
