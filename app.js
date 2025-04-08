@@ -1,4 +1,4 @@
-const token = "";
+const token = "6109425451:AAFRw5GseSxOQgIHpnoShI86sfIujmFM5X0";
 
 const TelegramBot = require("node-telegram-bot-api");
 const { Network } = require("./network/net");
@@ -142,7 +142,7 @@ bot.on("message", async (message) => {
                         message.chat.id,
                         "[ 🌐 ] - در حال پردازش ..."
                     ).then(async (rmsg) => {
-                        await network.getTransactionInfo(tHash, async (trans) => {
+                        await network.getTransactionInfo(message.text.replace('https://tronscan.org/#/transaction/', ''), async (trans) => {
                             if (trans.timestamp == undefined && trans.toAddress == undefined && trans.ownerAddress == undefined){
                                 await bot.editMessageText("[ ❌ ] - هش ارسال شده اشتباه میباشد, دوباره ارسال کنید", {
                                     chat_id: rmsg.chat.id,
@@ -171,8 +171,8 @@ bot.on("message", async (message) => {
                                     const fm = Buffer.from(obj['from'].toString()).toString("base64");
                                     const tp = Buffer.from(obj['to'].toString()).toString("base64");
                                     transes[message.chat.id]['objects'].splice(x, 1);
-                                    delete transes.tids[fm];
-                                    delete transes.tids[tp];
+                                    transes.tids.splice(transes.tids.indexOf(fm), 1);
+                                    transes.tids.splice(transes.tids.indexOf(tp), 1);
                                     if (transes[message.chat.id]['objects'].length == 0){
                                         delete transes[message.chat.id];
                                         delete transes.chats.splice(transes.chats.indexOf(message.chat.id), 1);
@@ -186,7 +186,7 @@ bot.on("message", async (message) => {
         }
     }
 
-    if (message.text == "واسطه"){
+    /* if (message.text == "واسطه"){
         if (transes.tids.includes(Buffer.from(message.from.id.toString()).toString("base64"))){
             await bot.sendMessage(
                 message.chat.id,
@@ -245,7 +245,8 @@ bot.on("message", async (message) => {
                 });
             })
         }
-    } else if (message.text == "واسطه +"){
+    */
+    if (message.text == "واسطه"){
         if (transes.tids.includes(Buffer.from(message.from.id.toString()).toString("base64"))){
             await bot.sendMessage(
                 message.chat.id,
@@ -296,6 +297,12 @@ bot.on("message", async (message) => {
                         transes[message.chat.id] = {};
                         transes[message.chat.id]['objects'] = [];
                     }
+                    /*
+                    {
+                                        text: "لغو ❌",
+                                        callback_data: `cancel`
+                                    }
+                     */
                     transes[message.chat.id]['objects'].push({
                         from: null,
                         to: null,
@@ -308,6 +315,32 @@ bot.on("message", async (message) => {
                             translink: null
                         }
                     });
+                    await bot.editMessageText(
+                        `[ 💎 ] - توجه داشته باش که طرف مقابلت ${message.reply_to_message.from.id} هس و خودت ${message.from.id}\n\n<b>نقش ها ♻</b>\n[ 🔐 ] - دریافت کننده: کسی که قراره پول رو دریافت بکنه\n[ 🔓 ] - ارسال کننده: کسی که قراره پولو بزنه`,
+                        {
+                            parse_mode: "HTML",
+                            reply_markup: {
+                                inline_keyboard: [
+                                    [
+                                        {
+                                            text: "دریافت کننده 📪",
+                                            callback_data: `get_${message.from.id}`
+                                        },
+                                        {
+                                            text: "ارسال کننده 🍬",
+                                            callback_data: `send_${message.from.id}`
+                                        }
+                                    ],
+                                    [
+                                        {
+                                            text: "لغو ❌",
+                                            callback_data: `cancel_${rmsg.message_id}`
+                                        }
+                                    ]
+                                ]
+                            }
+                        }
+                    )
                 })
             } else {
                 await bot.sendMessage(
@@ -408,16 +441,17 @@ bot.on("callback_query", async (call) => {
 bot.on("inline_query", async (inline) => {
     await capture(inline.query, async (data) => {
         if (data['status'] == "OK"){
-            let date = new Date(data['end']);
+            let date = new Date(data['result']['end']);
+		console.log(data)
             await bot.answerInlineQuery(
                 inline.id,
                 [
                     {
                         type: "article",
-                        id: inline.query,
+                        id: '1',
                         title: "👁 Token Found",
                         input_message_content: {
-                            message_text: `[ 🎫 ] - token: ${inline.query}\n[ 🌊 ] - from, to: ${data['from']} -> ${data['to']}\n\n[ 🕸 ] - from wallet: ${data['settings']['from_hash']}\n\n[ 🦋 ] - to wallet: ${data['settings']['to_hash']}\n\n[ 🍬 ] - link: ${data['settings']['translink']}\n[ ⌛ ] - finished in ${date.getFullYear()}/${date.getMonth()}/${date.getDay()} - ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}:${date.getMilliseconds()}`
+                            message_text: `[ 🎫 ] - token: ${inline.query}\n[ 🌊 ] - from, to: ${data['result']['from']} -> ${data['result']['to']}\n\n[ 🕸 ] - from wallet: ${data['result']['settings']['from_hash']}\n\n[ 🦋 ] - to wallet: ${data['result']['settings']['to_hash']}\n\n[ 🍬 ] - link: ${data['result']['settings']['translink']}\n[ ⌛ ] - finished in ${date.getFullYear()}/${date.getMonth()}/${date.getDay()} - ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}:${date.getMilliseconds()}`
                         }
                     }
                 ]
@@ -428,7 +462,7 @@ bot.on("inline_query", async (inline) => {
                 [
                     {
                         type: "article",
-                        id: inline.query,
+                        id: '1',
                         title: "❌ Token Not Found",
                         input_message_content: {
                             message_text: `[ ❌ ] - token not found`
@@ -458,11 +492,11 @@ setInterval(() => {
                 
                 transes[chat]['objects'].splice(x, 1);
                 if (transes.tids.includes(fm)){
-                    delete transes.tids[fm];
+                    transes.tids.splice(transes.tids.indexOf(fm),1);
                 }
                 
                 if (transes.tids.includes(tp)){
-                    delete transes.tids[tp];
+                    transes.tids.splice(transes.tids.indexOf(tp), 1);
                 }
 
                 if (transes[chat]['objects'].length == 0){
